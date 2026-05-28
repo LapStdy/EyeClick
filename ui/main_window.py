@@ -634,6 +634,7 @@ class App(tk.Tk):
         if (
             self.auto_start_var.get()
             and self.target_window
+            and self.target_window.is_valid()
             and self.tasks
         ):
             self.after(1000, self._start_execution)
