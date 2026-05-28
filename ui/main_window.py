@@ -618,6 +618,14 @@ class App(tk.Tk):
                     text=f"已绑定: {self.config_mgr.target_window_title}",
                     foreground="green",
                 )
+            else:
+                self.target_window = TargetWindow(
+                    0, self.config_mgr.target_window_title
+                )
+                self.target_label.config(
+                    text=f"已绑定: {self.config_mgr.target_window_title}（窗口未打开）",
+                    foreground="orange",
+                )
 
         if self.tasks:
             self._refresh_task_list()
