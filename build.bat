@@ -3,7 +3,7 @@ chcp 65001 >nul
 echo ===== EyeClick 打包脚本 =====
 
 pyinstaller --onefile --windowed ^
-    --name "EyeClick_v2.0" ^
+    --name "EyeClick_v2.4" ^
     --icon=favicon.ico ^
     --add-data "templates;templates" ^
     --hidden-import=cv2 ^

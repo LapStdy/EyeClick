@@ -12,6 +12,8 @@ class Task:
         match_scale: float = 0.0,
         click_offset_x: int = 0,
         click_offset_y: int = 0,
+        click_x: Optional[int] = None,
+        click_y: Optional[int] = None,
         search_region: Optional[tuple] = None,
         wait_duration: float = 0.0,
         max_retries: int = 1,
@@ -25,13 +27,15 @@ class Task:
         self.match_scale = match_scale
         self.click_offset_x = click_offset_x
         self.click_offset_y = click_offset_y
+        self.click_x = click_x
+        self.click_y = click_y
         self.search_region = search_region
         self.wait_duration = wait_duration
         self.max_retries = max_retries
         self.retry_interval = retry_interval
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "id": self.id,
             "task_type": self.task_type,
             "countdown": self.countdown,
@@ -45,6 +49,10 @@ class Task:
             "max_retries": self.max_retries,
             "retry_interval": self.retry_interval,
         }
+        if self.click_x is not None and self.click_y is not None:
+            d["click_x"] = self.click_x
+            d["click_y"] = self.click_y
+        return d
 
     @classmethod
     def from_dict(cls, data: dict) -> "Task":
@@ -57,6 +65,8 @@ class Task:
             match_scale=data.get("match_scale", 0.0),
             click_offset_x=data.get("click_offset_x", 0),
             click_offset_y=data.get("click_offset_y", 0),
+            click_x=data.get("click_x"),
+            click_y=data.get("click_y"),
             search_region=data.get("search_region"),
             wait_duration=data.get("wait_duration", 0.0),
             max_retries=data.get("max_retries", 1),

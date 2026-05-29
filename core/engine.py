@@ -117,11 +117,17 @@ class ExecutionEngine:
         cx, cy, conf = result
         screen_x = cx + region_offset_x
         screen_y = cy + region_offset_y
-        click_x = screen_x + task.click_offset_x
-        click_y = screen_y + task.click_offset_y
+
+        if task.click_x is not None and task.click_y is not None:
+            click_x, click_y = task.click_x, task.click_y
+            pos_label = f"预设坐标({click_x}, {click_y})"
+        else:
+            click_x = screen_x + task.click_offset_x
+            click_y = screen_y + task.click_offset_y
+            pos_label = f"偏移({click_x}, {click_y})"
 
         self.log(
-            f"匹配成功: 位置({screen_x}, {screen_y}) 置信度{conf:.2%} → 点击({click_x}, {click_y})"
+            f"匹配成功: 位置({screen_x}, {screen_y}) 置信度{conf:.2%} → {pos_label}"
         )
 
         if self.highlight:

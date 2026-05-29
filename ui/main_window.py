@@ -20,7 +20,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("EyeClick - 基于图像识别的鼠标模拟点击工具 v2.0")
+        self.title("EyeClick - 基于图像识别的鼠标模拟点击工具 v2.4")
         self.geometry("900x750")
         self.minsize(750, 600)
 
@@ -61,7 +61,7 @@ class App(tk.Tk):
         ttk.Button(row1, text="刷新", command=self._refresh_windows).pack(
             side=tk.LEFT, padx=3
         )
-        ttk.Button(row1, text="选择目标窗口", command=self._select_target_window).pack(
+        ttk.Button(row1, text="绑定目标窗口", command=self._select_target_window).pack(
             side=tk.LEFT, padx=3
         )
 
@@ -366,7 +366,10 @@ class App(tk.Tk):
             else:
                 template_display = os.path.basename(task.template_path) if task.template_path else "无"
                 confidence_display = f"{task.confidence_threshold:.2f}"
-                offset_display = f"({task.click_offset_x}, {task.click_offset_y})"
+                if task.click_x is not None and task.click_y is not None:
+                    offset_display = f"坐标({task.click_x},{task.click_y})"
+                else:
+                    offset_display = f"偏移({task.click_offset_x},{task.click_offset_y})"
 
             self.task_tree.insert(
                 "",

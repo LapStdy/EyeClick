@@ -15,6 +15,7 @@ class TaskDialog(tk.Toplevel):
         self.result = None
         self._photo = None
         self._search_region = None
+        self._click_pos = None
         self.setup_ui()
 
         if task:
@@ -121,17 +122,22 @@ class TaskDialog(tk.Toplevel):
         self.scale_entry.pack(side=tk.LEFT, padx=10)
         ttk.Label(scale_row, text="(0=自动多尺度)").pack(side=tk.LEFT)
 
-        offset_row = ttk.Frame(param_frame)
-        offset_row.pack(fill=tk.X, pady=3)
-        ttk.Label(offset_row, text="点击偏移 X:").pack(side=tk.LEFT)
-        self.offset_x_entry = ttk.Entry(offset_row, width=8)
-        self.offset_x_entry.insert(0, "0")
-        self.offset_x_entry.pack(side=tk.LEFT, padx=10)
-        ttk.Label(offset_row, text="px   Y:").pack(side=tk.LEFT)
-        self.offset_y_entry = ttk.Entry(offset_row, width=8)
-        self.offset_y_entry.insert(0, "0")
-        self.offset_y_entry.pack(side=tk.LEFT, padx=5)
-        ttk.Label(offset_row, text="px").pack(side=tk.LEFT)
+        pos_row = ttk.Frame(param_frame)
+        pos_row.pack(fill=tk.X, pady=3)
+        ttk.Label(pos_row, text="点击位置:").pack(side=tk.LEFT)
+        self.pos_select_btn = ttk.Button(
+            pos_row, text="在截图上选择", command=self._on_select_click_pos
+        )
+        self.pos_select_btn.pack(side=tk.LEFT, padx=10)
+        self.pos_clear_btn = ttk.Button(
+            pos_row, text="清除坐标", command=self._on_clear_click_pos
+        )
+        self.pos_clear_btn.pack(side=tk.LEFT, padx=2)
+
+        self.pos_label = ttk.Label(
+            param_frame, text="未设置（点击模板匹配中心）", foreground="gray"
+        )
+        self.pos_label.pack(anchor=tk.W, padx=22, pady=(0, 3))
 
         retry_row = ttk.Frame(param_frame)
         retry_row.pack(fill=tk.X, pady=3)
@@ -175,8 +181,8 @@ class TaskDialog(tk.Toplevel):
         self.region_clear_btn.configure(state=state)
         self.confidence_scale.scale.configure(state=state)
         self.scale_entry.configure(state=state)
-        self.offset_x_entry.configure(state=state)
-        self.offset_y_entry.configure(state=state)
+        self.pos_select_btn.configure(state=state)
+        self.pos_clear_btn.configure(state=state)
         self.retry_entry.configure(state=state)
         self.retry_interval_entry.configure(state=state)
 
@@ -247,6 +253,28 @@ class TaskDialog(tk.Toplevel):
         else:
             self.region_label.config(text="未设置区域", foreground="gray")
 
+    def _on_select_click_pos(self):
+        from ui.template_capture import ClickPointSelectDialog
+        dialog = ClickPointSelectDialog(self, self._click_pos)
+        if dialog.result is not None:
+            self._click_pos = dialog.result
+            self._update_click_pos_display()
+
+    def _on_clear_click_pos(self):
+        self._click_pos = None
+        self._update_click_pos_display()
+
+    def _update_click_pos_display(self):
+        if self._click_pos is not None:
+            x, y = self._click_pos
+            self.pos_label.config(
+                text=f"坐标: ({x}, {y})", foreground="blue"
+            )
+        else:
+            self.pos_label.config(
+                text="未设置（点击模板匹配中心）", foreground="gray"
+            )
+
     def _get_window_origin(self):
         try:
             parent = self.master
@@ -295,10 +323,8 @@ class TaskDialog(tk.Toplevel):
         self.confidence_scale.set(task.confidence_threshold)
         self.scale_entry.delete(0, tk.END)
         self.scale_entry.insert(0, str(task.match_scale))
-        self.offset_x_entry.delete(0, tk.END)
-        self.offset_x_entry.insert(0, str(task.click_offset_x))
-        self.offset_y_entry.delete(0, tk.END)
-        self.offset_y_entry.insert(0, str(task.click_offset_y))
+        self._click_pos = (task.click_x, task.click_y) if task.click_x is not None and task.click_y is not None else None
+        self._update_click_pos_display()
         self.retry_entry.delete(0, tk.END)
         self.retry_entry.insert(0, str(task.max_retries))
         self.retry_interval_entry.delete(0, tk.END)
@@ -339,11 +365,7 @@ class TaskDialog(tk.Toplevel):
                 if match_scale < 0 or match_scale > 5:
                     messagebox.showwarning("输入错误", "匹配缩放因子必须在 0 ~ 5 之间", parent=self)
                     return
-                offset_x = int(self.offset_x_entry.get())
-                offset_y = int(self.offset_y_entry.get())
-                if abs(offset_x) > 5000 or abs(offset_y) > 5000:
-                    messagebox.showwarning("输入错误", "点击偏移量必须在 ±5000px 之间", parent=self)
-                    return
+                click_x, click_y = (self._click_pos if self._click_pos is not None else (None, None))
                 max_retries = int(self.retry_entry.get())
                 if max_retries < 0 or max_retries > 100:
                     messagebox.showwarning("输入错误", "重试次数必须在 0 ~ 100 之间", parent=self)
@@ -362,8 +384,8 @@ class TaskDialog(tk.Toplevel):
                     template_path=template_path,
                     confidence_threshold=confidence,
                     match_scale=match_scale,
-                    click_offset_x=offset_x,
-                    click_offset_y=offset_y,
+                    click_x=click_x,
+                    click_y=click_y,
                     max_retries=max_retries,
                     retry_interval=retry_interval,
                     search_region=self._search_region,
