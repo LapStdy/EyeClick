@@ -10,3 +10,4 @@ templates/
 .idea/
 *.egg-info/
 .pytest_cache/
+CHANGELOG.md
